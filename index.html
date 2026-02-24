@@ -644,18 +644,21 @@
  
     function getFiltered() {
       const q = (state.q || "").trim().toLowerCase();
+      const teamSel = state.team || "__all__";
  
+      // *** IMPORTANT ***
+      // Do NOT sort, do NOT change order.
+      // We return filtered data in the EXACT SAME ORDER
+      // as the PLAYERS array above.
       return PLAYERS.filter(p => {
-        const team = (p.team || "Approved for Bidding").trim();
+        const team = (p.team || "Unassigned").trim();
         const village = (p.village || "").trim();
         const type = (p.type || "").trim();
         const mobile = (p.mobile || "").trim();
         const name = (p.name || "").trim();
  
-        // TEAM FILTER (only apply if a team is chosen)
-        if (state.team !== "__all__" && team !== state.team) {
-          return false;
-        }
+        // TEAM FILTER
+        if (teamSel !== "__all__" && team !== teamSel) return false;
  
         // SEARCH FILTER
         if (q) {
@@ -664,11 +667,8 @@
         }
  
         return true;
-      }).sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-      );
-    }
- 
+      });
+    } 
  
     function renderPlayers() {
       const list = document.getElementById("playerList");
@@ -745,6 +745,7 @@
 
 </body>
 </html>
+
 
 
 
