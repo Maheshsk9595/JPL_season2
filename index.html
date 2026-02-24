@@ -595,18 +595,98 @@
  
     const FALLBACK_PHOTO = "https://ui-avatars.com/api/?background=bbb&color=fff&name=Player";
  
-    function renderPlayers() {
-      const container = document.getElementById("playerList");
-      container.innerHTML = "";
+    // --- State for filters ---
+    const state = {
+      q: "",
+      team: "__all__",
+      // village: "__all__", // enable if you add the village dropdown
+    };
  
-      PLAYERS.forEach(p => {
+    // Debounce helper (so typing doesn’t re-render on every keystroke)
+    function debounce(fn, ms = 200) {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), ms);
+      };
+    }
+ 
+    // Build unique sorted lists for dropdowns
+    function uniqueSorted(values) {
+      return Array.from(new Set(values.filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+      );
+    }
+ 
+    function populateFilters() {
+      const teamEl = document.getElementById("plTeam");
+      // const villageEl = document.getElementById("plVillage"); // optional
+ 
+      // Teams
+      const teams = uniqueSorted(PLAYERS.map(p => p.team || "Unassigned"));
+      teams.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        teamEl.appendChild(opt);
+      });
+ 
+      // Villages (optional)
+      // const villages = uniqueSorted(PLAYERS.map(p => p.village || ""));
+      // villages.forEach(v => {
+      //   const opt = document.createElement("option");
+      //   opt.value = v;
+      //   opt.textContent = v;
+      //   villageEl.appendChild(opt);
+      // });
+    }
+ 
+ 
+    function getFiltered() {
+      const q = (state.q || "").trim().toLowerCase();
+ 
+      return PLAYERS.filter(p => {
+        const team = (p.team || "Approved for Bidding").trim();
+        const village = (p.village || "").trim();
+        const type = (p.type || "").trim();
+        const mobile = (p.mobile || "").trim();
+        const name = (p.name || "").trim();
+ 
+        // TEAM FILTER (only apply if a team is chosen)
+        if (state.team !== "__all__" && team !== state.team) {
+          return false;
+        }
+ 
+        // SEARCH FILTER
+        if (q) {
+          const hay = `${name} ${type} ${village} ${team} ${mobile}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+ 
+        return true;
+      }).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+      );
+    }
+ 
+ 
+    function renderPlayers() {
+      const list = document.getElementById("playerList");
+      const countEl = document.getElementById("plCount");
+      list.innerHTML = "";
+ 
+      const data = getFiltered();
+      countEl.textContent = `${data.length} player${data.length === 1 ? "" : "s"}`;
+ 
+      data.forEach(p => {
         const card = document.createElement("div");
         card.className = "player-card";
  
         const img = document.createElement("img");
         img.src = p.photo ? p.photo : FALLBACK_PHOTO;
-        img.alt = p.name + " photo";
-        img.onerror = () => img.src = FALLBACK_PHOTO;
+        img.alt = `${p.name} photo`;
+        img.loading = "lazy";
+        img.onerror = () => { img.src = FALLBACK_PHOTO; };
  
         const info = document.createElement("div");
         info.className = "player-info";
@@ -617,23 +697,55 @@
  
         const meta = document.createElement("p");
         meta.className = "player-meta";
-        meta.textContent = `${p.village} • ${p.type} • ${p.mobile} • ${p.team}`;
+        // Make the mobile number clickable (optional but handy on phones)
+        const tel = (p.mobile || "").replace(/\s+/g, "");
+        meta.innerHTML = `
+          ${p.village || ""} • ${p.team || "Unassigned"} • ${p.type || ""}
+          ${tel ? ` • tel:${tel}${p.mobile}</a>` : ""}
+        `.trim();
  
         info.appendChild(name);
         info.appendChild(meta);
         card.appendChild(img);
         card.appendChild(info);
  
-        container.appendChild(card);
+        list.appendChild(card);
       });
     }
  
+    function wireFilters() {
+      const searchEl = document.getElementById("plSearch");
+      const teamEl = document.getElementById("plTeam");
+      // const villageEl = document.getElementById("plVillage"); // optional
+ 
+      // Search with debounce
+      searchEl.addEventListener("input", debounce(() => {
+        state.q = searchEl.value || "";
+        renderPlayers();
+      }, 200));
+ 
+      teamEl.addEventListener("change", () => {
+        state.team = teamEl.value;
+        renderPlayers();
+      });
+ 
+      // villageEl.addEventListener("change", () => {
+      //   state.village = villageEl.value;
+      //   renderPlayers();
+      // });
+    }
+ 
+    // ---- Init ----
+    populateFilters();
+    wireFilters();
     renderPlayers();
+ 
   </script>    
 
 
 </body>
 </html>
+
 
 
 
