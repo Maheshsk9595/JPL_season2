@@ -697,11 +697,12 @@
  
         const meta = document.createElement("p");
         meta.className = "player-meta";
-        // Make the mobile number clickable (optional but handy on phones)
+         
         const tel = (p.mobile || "").replace(/\s+/g, "");
+         
         meta.innerHTML = `
           ${p.village || ""} • ${p.team || "Unassigned"} • ${p.type || ""}
-          ${tel ? ` • tel:${tel}${p.mobile}</a>` : ""}
+          ${tel ? ` • Phone: ${tel}` : ""}
         `.trim();
  
         info.appendChild(name);
@@ -745,6 +746,7 @@
 
 </body>
 </html>
+
 
 
 
