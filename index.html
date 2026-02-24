@@ -70,6 +70,134 @@
     .responsive-iframe{width:100%;height:70vh;min-height:520px;border:0;border-radius:8px;background:#fff}
 
     @media (prefers-reduced-motion:reduce){.slides{transition:none !important}}
+
+    /* Registered Players */
+    .registered-players {
+      margin-top: 32px;
+    }
+ 
+    .player-list {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+ 
+    @media (min-width: 700px) {
+      .player-list {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+ 
+    .player-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+ 
+    .player-card img {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #eee;
+    }
+ 
+    .player-info {
+      display: flex;
+      flex-direction: column;
+    }
+ 
+    .player-name {
+      font-weight: 600;
+      margin: 0;
+    }
+ 
+    .player-meta {
+      margin: 2px 0 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+   
+    /* === Filters above Registered Players === */
+    .players-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0 12px;
+    }
+ 
+    .players-filters .filter {
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      min-width: 200px;
+    }
+ 
+    .players-filters .count {
+      color: var(--muted);
+      font-size: 14px;
+      margin-left: auto;
+    }
+ 
+    /* Optional: on small screens, filters go full width for easy tapping */
+    @media (max-width: 768px) {
+      .players-filters .filter { min-width: 100%; }
+      .players-filters .count { width: 100%; text-align: right; }
+    }
+        /* === Mobile-only scrolling for Registered Players === */
+    @media (max-width: 768px) {
+      /* Limit the height of the players section */
+      #registered-players .scroll-frame {
+        max-height: calc(100vh - 220px); /* tweak if needed */
+        overflow: auto;
+        -webkit-overflow-scrolling: touch; /* smooth on iOS */
+        position: relative;
+        padding-bottom: 8px; /* spacing for fade */
+      }
+ 
+      /* Optional: make the section title sticky so it stays visible while list scrolls */
+      #registered-players .section-title,
+      #registered-players .section-subtle {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #e4e4e4; /* match your page bg */
+        padding-top: 8px;    /* prevents visual jump */
+      }
+ 
+      /* Optional: subtle fades to hint scrollability */
+      #registered-players .scroll-frame::before,
+      #registered-players .scroll-frame::after {
+        content: "";
+        position: sticky;
+        left: 0; right: 0;
+        height: 14px;
+        pointer-events: none;
+        z-index: 1;
+      }
+      #registered-players .scroll-frame::before {
+        top: 0;
+        background: linear-gradient(#e4e4e4, rgba(228,228,228,0));
+      }
+      #registered-players .scroll-frame::after {
+        bottom: 0;
+        background: linear-gradient(rgba(228,228,228,0), #e4e4e4);
+      }
+    }
+ 
+    /* Optional: tighten player cards a bit on mobile so more fit per view */
+    @media (max-width: 768px) {
+      .player-card { padding: 10px; gap: 10px; }
+      .player-card img { width: 40px; height: 40px; }
+      .player-name { font-size: 15px; }
+      .player-meta { font-size: 13px; }
+    }    
   </style>
 </head>
 <body>
@@ -225,7 +353,35 @@
       </div>
     </section>
 
-
+    <!-- Registered Players -->
+    <section class="section" id="registered-players">
+      <div class="container registered-players">
+        <h2 class="section-title">Registered Players</h2>
+        <p class="section-subtle">List of all players with village, team, type & mobile</p>
+ 
+        <!-- Filters row -->
+        <div class="players-filters">
+          <input id="plSearch" class="filter" type="search" placeholder="Search player name…" aria-label="Search by player name">
+          <select id="plTeam" class="filter" aria-label="Filter by team">
+            <option value="__all__">All teams</option>
+            <!-- JS will populate real teams -->
+          </select>
+          <!-- Optional: add village dropdown too; uncomment if you want it
+          <select id="plVillage" class="filter" aria-label="Filter by village">
+            <option value="__all__">All villages</option>
+          </select>
+          -->
+          <span id="plCount" class="count" aria-live="polite">0 players</span>
+        </div>
+ 
+        <!-- If you already wrapped the list in a scroll-frame for mobile, keep it -->
+        <div class="scroll-frame">
+          <div id="playerList" class="player-list" role="list"></div>
+        </div>
+      </div>
+    </section>
+    <!-- End of Registered Players -->
+    
     <!-- Honoured Guests -->
     <section class="section" id="guests">
       <div class="container">
@@ -409,10 +565,76 @@
       start();
     });
   })();
+
+  <script>
+    // 📝 EDIT THIS LIST ONLY
+    const PLAYERS = [
+      { name: "Naresh Muthukrishna", team: "Approved for Bidding", village: "Jawalagiri", mobile: "9108144362", type: "All rounder", photo: "C:/Users/503315010.HCAD/Downloads/avatar_1.jpg" },
+      { name: "Arun", team: "Approved for Bidding", village: "Jawalagiri", mobile: "8825415178", type: "All rounder", photo: "" },
+      { name: "UDHAY KUMAR K", team: "Approved for Bidding", village: "Jawalagiri", mobile: "7904441773", type: "All rounder", photo: "" },
+      { name: "Rajiv M", team: "Approved for Bidding", village: "Jawalagiri", mobile: "8838958113", type: "Batsman", photo: "" },
+      { name: "Karthik", team: "Approved for Bidding", village: "Jawalagiri", mobile: "7338164619", type: "Batsman", photo: "" },
+      { name: "SRINIVASACHARI N", team: "Approved for Bidding", village: "Jawalagiri", mobile: "7708974875", type: "Batsman", photo: "" },
+      { name: "Anand Ramakrishna", team: "Approved for Bidding", village: "Jawalagagiri", mobile: "9550359437", type: "Batsman", photo: "" },
+      { name: "Govindhrazz", team: "Approved for Bidding", village: "Jawalagiri", mobile: "9159443303", type: "All rounder", photo: "" },
+      { name: "Prabu barath", team: "Approved for Bidding", village: "Jawalagiri", mobile: "9150675879", type: "All rounder", photo: "" },
+      { name: "Dhanu", team: "Approved for Bidding", village: "Jawalagiri", mobile: "7338292572", type: "All rounder", photo: "" },
+      { name: "Dhilip", team: "Approved for Bidding", village: "Sollepuram", mobile: "9629029160", type: "Batsman", photo: "" },
+      { name: "VENKATESH C", team: "Approved for Bidding", village: "Jawalagiri", mobile: "9500326522", type: "All rounder", photo: "" },
+      { name: "Sasikumar", team: "Approved for Bidding", village: "Sollepuram", mobile: "9655557471", type: "All rounder", photo: "" },
+      { name: "Harish", team: "Approved for Bidding", village: "Sollepuram", mobile: "8110038528", type: "All rounder", photo: "" },
+      { name: "Chethan M", team: "Approved for Bidding", village: "Sollepuram", mobile: "9047131806", type: "Batsman", photo: "" },
+      { name: "Ravi M", team: "Approved for Bidding", village: "Sollepuram", mobile: "9944229806", type: "All rounder", photo: "" },
+      { name: "Ravi madesh", team: "Approved for Bidding", village: "Sollepuram", mobile: "8838217224", type: "Batsman", photo: "" },
+      { name: "Madhu (Chinnu)", team: "Approved for Bidding", village: "Jawalagiri", mobile: "8105183376", type: "Batsman", photo: "" },
+      { name: "Kishore Shetty", team: "Approved for Bidding", village: "Jawalagiri", mobile: "9986978585", type: "All rounder", photo: "" },
+      { name: "Manu", team: "Approved for Bidding", village: "Jawalagiri", mobile: "9110801340", type: "Batsman", photo: "" },
+      { name: "Kanthu Shetty", team: "Approved for Bidding", village: "Jawalagiri", mobile: "9360705792", type: "All rounder", photo: "" },
+      { name: "Naveen shetty", team: "Approved for Bidding", village: "Jawalagiri", mobile: "8073906613", type: "All rounder", photo: "" }
+    ];
+ 
+    const FALLBACK_PHOTO = "https://ui-avatars.com/api/?background=bbb&color=fff&name=Player";
+ 
+    function renderPlayers() {
+      const container = document.getElementById("playerList");
+      container.innerHTML = "";
+ 
+      PLAYERS.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "player-card";
+ 
+        const img = document.createElement("img");
+        img.src = p.photo ? p.photo : FALLBACK_PHOTO;
+        img.alt = p.name + " photo";
+        img.onerror = () => img.src = FALLBACK_PHOTO;
+ 
+        const info = document.createElement("div");
+        info.className = "player-info";
+ 
+        const name = document.createElement("p");
+        name.className = "player-name";
+        name.textContent = p.name;
+ 
+        const meta = document.createElement("p");
+        meta.className = "player-meta";
+        meta.textContent = `${p.village} • ${p.type} • ${p.mobile} • ${p.team}`;
+ 
+        info.appendChild(name);
+        info.appendChild(meta);
+        card.appendChild(img);
+        card.appendChild(info);
+ 
+        container.appendChild(card);
+      });
+    }
+ 
+    renderPlayers();
+  </script>    
 </script>
 
 </body>
 </html>
+
 
 
 
