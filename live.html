@@ -79,51 +79,39 @@
     .price-info .ts { font-size: 0.7rem; color: var(--text-muted); }
 
     /* 2. Team Summary Grid */
-    /* Exact Team Card Style from Index.html */
-.team-grid {
-  display: grid;
-  gap: 24px; /* Matches --gap: 24px */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
+    .team-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
 
-.team-card {
-  background: #fff;
-  border-radius: 12px; /* Matches --radius: 12px */
-  box-shadow: 0 4px 14px rgba(0,0,0,.08); /* Exact shadow from index */
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+    .team-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
 
-/* Updated Image Logic to prevent truncation */
-.team-logo {
-  width: 100%;
-  /* Removed fixed 16/9 aspect-ratio to let full logos show */
-  height: auto; 
-  object-fit: contain; 
-  background: #fff; 
-  display: block;
-}
+    .team-logo {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: #f0f0f0;
+    }
 
-.team-details {
-  padding: 14px 16px 16px; /* Matches .team-body padding */
-  text-align: left;
-}
-
-.team-details h3 {
-  margin: 0 0 6px;
-  font-size: 18px; /* Matches .team-name */
-  color: #111;
-  text-transform: uppercase;
-}
-
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px; /* Matches .team-meta */
-  color: #5b5b5b; /* Matches --muted */
-  padding: 2px 0;
-}
+    .team-details { padding: 15px; }
+    .team-details h3 { margin: 0 0 10px; font-size: 1rem; color: var(--red); text-transform: uppercase; }
+    .stat-row { 
+        display: flex; 
+        justify-content: space-between; 
+        padding: 5px 0; 
+        border-top: 1px solid #f0f0f0;
+        font-size: 0.9rem;
+    }
+    .val { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -161,26 +149,13 @@
     };
 
     async function loadLiveData() {
-    const selectionsDiv = document.getElementById('selections');
-    const teamsDiv = document.getElementById('teams');
-    const updatedP = document.getElementById('last-updated');
-  
-      // YOUR NEW SHEET ID
-      const sheetId = '14AGsMY7F4KT6Et03stkYmVCdxLpTome21cdrtrlB37I';
-      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
-      
-      // Using a different proxy to bypass any "Still not working" issues
-      const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(csvUrl);
-  
-    try {
-      const res = await fetch(proxyUrl);
-      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-  
-      const result = await res.json();
-      const csvText = result.contents; // allorigins returns data inside a 'contents' property
-  
-      const lines = csvText.trim().split('\n').filter(line => line.trim());
+      const csvUrl = 'https://docs.google.com/spreadsheets/d/1cLacaZIak6l1qxylwmZdmfg8KWhlfupqOkdWVuhEZE4/gviz/tq?tqx=out:csv&gid=0';
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(csvUrl);
 
+      try {
+        const res = await fetch(proxyUrl);
+        const csvText = await res.text();
+        const lines = csvText.trim().split('\n').filter(l => l.trim());
         
         // Parsing logic
         const dataRows = lines.slice(1).map(line => {
@@ -241,11 +216,11 @@
                 <h3>${name}</h3>
                 <div class="stat-row">
                     <span>Credit Balance:</span>
-                    <span style="font-weight:bold">${info.remaining.toLocaleString('en-IN')}</span>
+                    <span class="val">${info.remaining.toLocaleString('en-IN')}</span>
                 </div>
                 <div class="stat-row">
                     <span>Players Acquired:</span>
-                    <span style="font-weight:bold">${info.count}</span>
+                    <span class="val">${info.count}</span>
                 </div>
               </div>
             </article>`;
