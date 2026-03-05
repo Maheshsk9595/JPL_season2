@@ -148,14 +148,37 @@
       "TAPOVAN WARRIORS": "media/team_9.jpg"
     };
 
-    async function loadLiveData() {
-      const csvUrl = 'https://docs.google.com/spreadsheets/d/1cLacaZIak6l1qxylwmZdmfg8KWhlfupqOkdWVuhEZE4/gviz/tq?tqx=out:csv&gid=0';
-      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(csvUrl);
+    
+bhanu teja <bhanuteja503315010@gmail.com>
+15:33 (2 minutes ago)
+to me
 
+    async function loadLiveData() {
+      const selectionsDiv = document.getElementById('selections');
+      const teamsDiv = document.getElementById('teams');
+      const updatedP = document.getElementById('last-updated');
+    
+      // YOUR NEW SHEET ID
+      const sheetId = '14AGsMY7F4KT6Et03stkYmVCdxLpTome21cdrtrlB37I';
+      
+      // Use the export URL - it's more stable for CSV
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0&t=${Date.now()}`;
+      
+      // Switch to AllOrigins Proxy (More reliable than corsproxy.io)
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(csvUrl)}`;
+    
       try {
         const res = await fetch(proxyUrl);
-        const csvText = await res.text();
-        const lines = csvText.trim().split('\n').filter(l => l.trim());
+        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    
+        const result = await res.json();
+        const csvText = result.contents; // AllOrigins wraps the data in a 'contents' field
+    
+        if (!csvText) {
+          throw new Error("Received empty data from Sheet");
+        }
+
+    const lines = csvText.trim().split('\n').filter(line => line.trim());
         
         // Parsing logic
         const dataRows = lines.slice(1).map(line => {
