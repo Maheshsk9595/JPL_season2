@@ -165,15 +165,12 @@
     const teamsDiv = document.getElementById('teams');
     const updatedP = document.getElementById('last-updated');
   
-    // YOUR NEW SHEET ID
-    const sheetId = '14AGsMY7F4KT6Et03stkYmVCdxLpTome21cdrtrlB37I';
-    
-    // Use the 'export' endpoint - it's often more reliable for CSV fetching
-    // The 't=' part is a cache-buster to ensure you get REAL-TIME updates
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0&t=${Date.now()}`;
-    
-    // Try a different reliable proxy if corsproxy.io is being slow
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(csvUrl);
+      // YOUR NEW SHEET ID
+      const sheetId = '14AGsMY7F4KT6Et03stkYmVCdxLpTome21cdrtrlB37I';
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+      
+      // Using a different proxy to bypass any "Still not working" issues
+      const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(csvUrl);
   
     try {
       const res = await fetch(proxyUrl);
