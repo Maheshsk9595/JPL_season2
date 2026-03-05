@@ -1,378 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Live Updates — JPL 2</title>
-<style>
-  :root {
-    --ink:#111; --muted:#5b5b5b; --red:#C43428; --red-dark:#b3151b;
-    --radius:12px; --pad:clamp(16px,3vw,32px); --gap:10px;
-  }
-  * { box-sizing: border-box; }
-  body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f4f4f4; color:var(--ink); }
-  header { background:var(--red); color:#fff; padding:12px var(--pad); border-bottom:4px solid var(--red-dark); }
-  .container { max-width: 1000px; margin: 0 auto; padding: 16px var(--pad); }
-  h1 { margin:0; font-size: clamp(20px, 3.2vw, 28px); }
-  h2 { margin: 16px 0 10px; font-size: clamp(18px,3vw,24px); }
-  .subtle { color: var(--muted); margin-top: 6px; }
-  .bar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin: 12px 0 16px; }
-  .btn { appearance:none; border:none; background:var(--red); color:#fff; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:700; }
-  .btn:hover, .btn:focus-visible { background:var(--red-dark); outline:none; }
-  .card { background:#fff; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,.08); padding:12px; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Updates — JPL 2</title>
+  <style>
+    :root {
+      --red: #C43428;
+      --bg: #e4e4e4;
+      --card-bg: #ffffff;
+      --text-main: #111;
+      --text-muted: #5b5b5b;
+    }
 
-  /* Players list */
-  .list { display:grid; gap:var(--gap); margin:0; padding:0; list-style:none; }
-  .row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid #eee; border-radius:10px; }
-  .row .who { font-weight:600; }
-  .row .team { color:var(--muted); }
-  .row .price { font-weight:700; }
-  .row .time { color:var(--muted); font-size:13px; }
-  .pill { background:#000; color:#fff; padding:2px 8px; border-radius:999px; font-size:12px; margin-left:8px; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+    }
 
-  /* Scroll container for players (JS sets exact max-height for 10 rows) */
-  .scroll-frame { position:relative; }
-  .scroll-frame.scrolling { overflow:auto; -webkit-overflow-scrolling: touch; }
+    header {
+      background: var(--red);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 4px solid #b3151b;
+    }
+    header h1 { margin: 0; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
 
-  .status { font-size:14px; color:var(--muted); }
-  .error { color:#b3151b; }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-  /* Team summary grid */
-  .team-grid {
-    display:grid; gap:16px;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    margin-top:12px;
-  }
-  .team-card {
-    background:#fff; border-radius:12px; overflow:hidden;
-    box-shadow:0 4px 14px rgba(0,0,0,.08);
-    display:flex; flex-direction:column;
-  }
-  .team-cover { width:100%; aspect-ratio:16/9; object-fit:cover; background:#eee; }
-  .team-body { padding:12px 14px 14px; }
-  .team-name { margin:0 0 6px; font-weight:700; font-size:18px; }
-  .team-meta { margin:4px 0 0; color:var(--muted); font-size:14px; }
-  .team-meta strong { color:#000; }
-</style>
+    .btn-back {
+      background: var(--red);
+      color: white;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 15px 40px; }
+    h2 { font-size: 1.2rem; margin: 25px 0 15px; border-left: 4px solid var(--red); padding-left: 10px; }
+
+    /* 1. Scrollable Player List */
+    #selections-container {
+      background: white;
+      border-radius: 12px;
+      max-height: 550px; /* Limits to ~10 rows */
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .player-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .player-card:last-child { border-bottom: none; }
+
+    .player-info strong { font-size: 1rem; display: block; }
+    .player-info span { font-size: 0.85rem; color: var(--text-muted); }
+    .badge { background: #000; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 6px; margin-left: 5px; }
+
+    .price-info { text-align: right; }
+    .price-info .bid { font-weight: bold; color: var(--red); font-size: 1.1rem; display: block; }
+    .price-info .ts { font-size: 0.7rem; color: var(--text-muted); }
+
+    /* 2. Team Summary Grid */
+    .team-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .team-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .team-logo {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: #f0f0f0;
+    }
+
+    .team-details { padding: 15px; }
+    .team-details h3 { margin: 0 0 10px; font-size: 1rem; color: var(--red); text-transform: uppercase; }
+    .stat-row { 
+        display: flex; 
+        justify-content: space-between; 
+        padding: 5px 0; 
+        border-top: 1px solid #f0f0f0;
+        font-size: 0.9rem;
+    }
+    .val { font-weight: bold; }
+  </style>
 </head>
 <body>
-<header>
-  <div class="container">
+
+  <header>
     <h1>JAWALAGIRI PANCHAYAT LEAGUE 2</h1>
-    <h1>🔴 Live Auction Updates</h1>
-    <div class="subtle" style="color:#fff">Players selection in progress…</div>
-  </div>
-</header>
+  </header>
 
-<main class="container">
-  <div class="bar">
-    <a class="btn" href="index.html"> ← Back to Home</a>
-    <span id="status" class="status" aria-live="polite">Loading…</span>
+  <div class="status-bar">
+    <a href="index.html" class="btn-back">← Back to Home</a>
+    <span id="last-updated" style="font-size: 0.8rem; color: #666;"></span>
   </div>
 
-  <!-- Players Selections -->
-  <section aria-labelledby="players-title">
-    <h2 id="players-title">Player Selections</h2>
-    <p class="subtle" id="selCount">—</p>
-    <div id="liveListWrap" class="card scroll-frame">
-      <ul id="liveList" class="list" aria-live="polite" aria-busy="true"></ul>
+  <div class="container">
+    <h2>🔴 Live Auction Updates</h2>
+    <div id="selections-container">
+        <div id="selections">Loading auction data...</div>
     </div>
-  </section>
 
-  <!-- Team Summary -->
-  <section aria-labelledby="teams-title" style="margin-top:18px;">
-    <h2 id="teams-title">Teams Summary</h2>
-    <p class="subtle">Credits remaining and players acquired, computed from the live sheet.</p>
-    <div id="teamGrid" class="team-grid"></div>
-  </section>
-</main>
+    <h2>Teams Summary</h2>
+    <div id="teams" class="team-grid">Loading teams...</div>
+  </div>
 
-
-<script>
-  // --- DIAGNOSTICS: paste these lines at the top of your <script> ---
-  console.log('[Live] script parsed at', new Date().toISOString());
-
-  // Use the correct absolute URL (plain & not &amp;)
-  const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqnayawMPIZM1ydQwN3A8qUtMZejF9asxKkAppBF-GdLIQeuZknd1qCrSjKNsfksktJIvgtviK835V/pub?gid=0&single=true&output=csv';
-
-  // Hard guard: must start with https://docs.google.com/
-  if (!/^https:\/\/docs\.google\.com\//i.test(CSV_URL)) {
-    console.error('[Live] BAD CSV_URL (must be absolute https):', CSV_URL);
-    document.getElementById('status').textContent = 'Bad CSV URL (must start with https://docs.google.com/).';
-    throw new Error('CSV_URL is not absolute https');
-  }
-
-  // Global error hooks so we see everything
-  window.addEventListener('error', (e) => {
-    console.error('[Live] window error:', e.message, 'at', e.filename, e.lineno + ':' + e.colno);
-  });
-  window.addEventListener('unhandledrejection', (e) => {
-    console.error('[Live] unhandled rejection:', e.reason);
-  });
-
-  //
-
-  // ⚙️ Credits model for JPL
-  const TEAM_START_CREDITS = 100000; // 1,00,000
-  const ICON_DEDUCTION = 20000;      // 20,000 (auto-deducted per team)
-
-  // 🖼️ Optional per-team metadata (logo). Start credits same for all now.
-  const TEAM_META = {
-    'J ROCKERZ': { logo: 'media/teams/j_rockerz.jpg' },
-    // 'TEAM B': { logo: 'media/teams/team_b.jpg' },
-  };
-  const FALLBACK_LOGO = (teamName) =>
-    `https://ui-avatars.com/api/?background=bbb&color=fff&name=${encodeURIComponent(teamName || 'Team')}`;
-
-  const POLL_MS = 7000;
-
-  // --- DOM ---
-  const elList = document.getElementById('liveList');
-  const elListWrap = document.getElementById('liveListWrap');
-  const elStatus = document.getElementById('status');
-  const elSelCount = document.getElementById('selCount');
-  const elTeamGrid = document.getElementById('teamGrid');
-
-  // --- CSV parsing helpers (tolerant) ---
-
-  const HEADER_MAP = {
-    player:  ['player', 'player name', 'name'],
-    team:    ['team', 'team name', 'squad'],
-    price:   ['price', 'amount', 'bid', 'sold for'],
-    time:    ['time', 'timestamp', 'date', 'datetime'],
-    credits: ['credits', 'credit', 'credit points', 'points', 'player credits']
-  };
-
-  function parseCSV(text) {
-    const rows = [];
-    let row = [], cur = '', inQuotes = false;
-    for (let i = 0; i < text.length; i++) {
-      const c = text[i], n = text[i+1];
-      if (c === '"') { if (inQuotes && n === '"') { cur += '"'; i++; } else { inQuotes = !inQuotes; } }
-      else if (c === ',' && !inQuotes) { row.push(cur); cur = ''; }
-      else if ((c === '\n' || c === '\r') && !inQuotes) {
-        if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
-        row = []; cur = '';
-        if (c === '\r' && n === '\n') i++;
-      } else { cur += c; }
-    }
-    if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
-    return rows;
-  }
-
-  function indexHeaders(headerRow) {
-    const header = headerRow.map(h => (h ?? '').toString().trim().toLowerCase());
-    const findIdx = (aliases) =>
-      header.findIndex(h => aliases.includes(h));
-    return {
-      player:  findIdx(HEADER_MAP.player),
-      team:    findIdx(HEADER_MAP.team),
-      price:   findIdx(HEADER_MAP.price),
-      time:    findIdx(HEADER_MAP.time),
-      credits: findIdx(HEADER_MAP.credits),
-      _raw: header
+  <script>
+    // TEAM DATABASE: Links sheet names to your index.html images
+    const TEAM_ASSETS = {
+      "VENKY XI": "media/team_2.png",
+      "JOLLY FRIENDS XI": "media/team_3.jpg",
+      "ORIGINAL GANGSTERS XI": "media/team_4.jpg",
+      "ROYAL CHALLENGERS": "media/team_5.jpg",
+      "ELEVEN STARS": "media/team_6.jpg",
+      "THE 18": "media/team_7.jpg",
+      "JAWALAGIRI KNIGHT RIDERS": "media/team_8.jpg",
+      "TAPOVAN WARRIORS": "media/team_9.jpg"
     };
-  }
 
-  function toItems(csvText) {
-    const rows = parseCSV(csvText).filter(r => r.length && r.some(cell => String(cell).trim() !== ''));
-    if (!rows.length) return { items: [], idx: null };
-    const idx = indexHeaders(rows[0]);
-    const get = (r, i) => (i >= 0 ? (r[i] ?? '').toString().trim() : '');
-    const items = rows.slice(1).map(r => ({
-      player:  get(r, idx.player),
-      team:    get(r, idx.team),
-      price:   Number(get(r, idx.price)) || 0,     // show in Players list only
-      time:    get(r, idx.time),
-      credits: Number(get(r, idx.credits)) || 0    // used for team credits
-    }));
-    return { items, idx };
-  }
+    async function loadLiveData() {
+      const csvUrl = 'https://docs.google.com/spreadsheets/d/1cLacaZIak6l1qxylwmZdmfg8KWhlfupqOkdWVuhEZE4/gviz/tq?tqx=out:csv&gid=0';
+      const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(csvUrl);
 
-  function formatINR(n) {
-    try {
-      return new Intl.NumberFormat('en-IN', { style:'currency', currency:'INR', maximumFractionDigits:0 }).format(n);
-    } catch { return '₹' + (n||0).toLocaleString('en-IN'); }
-  }
+      try {
+        const res = await fetch(proxyUrl);
+        const csvText = await res.text();
+        const lines = csvText.trim().split('\n').filter(l => l.trim());
+        
+        // Parsing logic
+        const dataRows = lines.slice(1).map(line => {
+          let cells = []; let cur = ''; let inQ = false;
+          for (let c of line + ',') {
+            if (c === '"') inQ = !inQ;
+            else if (c === ',' && !inQ) { cells.push(cur.trim().replace(/^"|"$/g, '')); cur = ''; }
+            else cur += c;
+          }
+          return cells;
+        });
 
-  // --- Players (scrollable after 10 rows) ---
+        // 1. Render Scrollable Player List
+        let playersHTML = '';
+        dataRows.forEach((row, index) => {
+          const [ts, team, player, bidPrice, creditPoints] = row;
+          playersHTML += `
+            <div class="player-card">
+              <div class="player-info">
+                <strong>${player} <span class="badge">#${index + 1}</span></strong>
+                <span>Team: ${team}</span>
+              </div>
+              <div class="price-info">
+                <span class="bid">₹${Number(bidPrice).toLocaleString('en-IN')}</span>
+                <span class="ts">${ts}</span>
+              </div>
+            </div>`;
+        });
+        document.getElementById('selections').innerHTML = playersHTML || "No bids yet";
 
-  function renderPlayers(items) {
-    elList.innerHTML = '';
-    elList.setAttribute('aria-busy', 'true');
+        // 2. Initialize Teams (Setting 100,000 balance and -20,000 icon fee)
+        const summary = {};
+        Object.keys(TEAM_ASSETS).forEach(name => {
+          summary[name] = { 
+            remaining: 100000 - 20000, // 80,000 starting points
+            count: 0 
+          };
+        });
 
-    const total = Array.isArray(items) ? items.length : 0;
-    elSelCount.textContent = total ? `${total} selection${total>1?'s':''}` : 'No selections yet.';
+        // Calculate usage based on Sheet "Credit Points" column
+        dataRows.forEach(row => {
+          const teamName = row[1];
+          const creditsUsed = parseFloat(row[4]) || 0; // Column 5
+          if (summary[teamName]) {
+            summary[teamName].remaining -= creditsUsed;
+            summary[teamName].count += 1;
+          }
+        });
 
-    if (!total) {
-      const li = document.createElement('li');
-      li.className = 'row';
-      li.textContent = 'No selections yet.';
-      elList.appendChild(li);
-      elList.setAttribute('aria-busy', 'false');
-      adjustScrollForTenRows();
-      return;
+        // Render Team Grid
+        let teamsHTML = '';
+        Object.keys(TEAM_ASSETS).forEach(name => {
+          const info = summary[name];
+          teamsHTML += `
+            <article class="team-card">
+              <img src="${TEAM_ASSETS[name]}" class="team-logo" onerror="this.src='https://ui-avatars.com/api/?name=${name}'">
+              <div class="team-details">
+                <h3>${name}</h3>
+                <div class="stat-row">
+                    <span>Credit Balance:</span>
+                    <span class="val">${info.remaining.toLocaleString('en-IN')}</span>
+                </div>
+                <div class="stat-row">
+                    <span>Players Acquired:</span>
+                    <span class="val">${info.count}</span>
+                </div>
+              </div>
+            </article>`;
+        });
+        document.getElementById('teams').innerHTML = teamsHTML;
+
+        document.getElementById('last-updated').textContent = `Sync: ${new Date().toLocaleTimeString()}`;
+
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    items.forEach((it, i) => {
-      const li = document.createElement('li');
-      li.className = 'row';
-
-      const left = document.createElement('div');
-      left.innerHTML = `
-        <div class="who">${it.player || 'Unknown'} <span class="pill">#${i+1}</span></div>
-        <div class="team">Team: ${it.team || '—'}</div>
-      `;
-
-      const right = document.createElement('div');
-      right.style.textAlign = 'right';
-      right.innerHTML = `
-        <div class="price">${formatINR(it.price)}</div>
-        <div class="time">${it.time ? new Date(it.time).toLocaleString() : ''}</div>
-      `;
-
-      li.appendChild(left);
-      li.appendChild(right);
-      elList.appendChild(li);
-    });
-
-    elList.setAttribute('aria-busy', 'false');
-    adjustScrollForTenRows();
-  }
-
-  function adjustScrollForTenRows() {
-    const rows = Array.from(elList.querySelectorAll('.row'));
-    elListWrap.classList.remove('scrolling');
-    elListWrap.style.maxHeight = '';
-
-    if (rows.length <= 10) return;
-
-    const first = rows[0];
-    if (!first) return;
-
-    const rowH = first.getBoundingClientRect().height;
-    const gap = 10; // keep in sync with CSS --gap
-    const maxH = (rowH * 10) + (gap * 9);
-
-    elListWrap.style.maxHeight = `${Math.round(maxH)}px`;
-    elListWrap.classList.add('scrolling');
-  }
-
-  // --- Teams (manual credits model) ---
-
-  function aggregateTeamsByCredits(items) {
-    const agg = new Map(); // team -> { creditSpent, count }
-    items.forEach(it => {
-      const team = (it.team || '').trim() || 'Unassigned';
-      if (!agg.has(team)) agg.set(team, { creditSpent: 0, count: 0 });
-      const t = agg.get(team);
-      t.count += 1;
-      t.creditSpent += Number(it.credits) || 0;
-    });
-    return agg;
-  }
-
-  function renderTeams(items) {
-    const agg = aggregateTeamsByCredits(items);
-
-    const names = new Set([
-      ...Object.keys(TEAM_META || {}),
-      ...Array.from(agg.keys())
-    ]);
-    names.delete('Unassigned'); // optional
-
-    elTeamGrid.innerHTML = '';
-    const sorted = Array.from(names).sort((a,b) => a.localeCompare(b));
-
-    if (!sorted.length) {
-      const empty = document.createElement('div');
-      empty.className = 'subtle';
-      empty.textContent = 'No team data yet.';
-      elTeamGrid.appendChild(empty);
-      return;
-    }
-
-    sorted.forEach(name => {
-      const meta = TEAM_META[name] || {};
-      const logo = meta.logo || FALLBACK_LOGO(name);
-      const stats = agg.get(name) || { creditSpent: 0, count: 0 };
-
-      // Remaining = 1,00,000 − 20,000 − Σ(manual credits)
-      const remaining = Math.max(0, TEAM_START_CREDITS - ICON_DEDUCTION - (Number(stats.creditSpent) || 0));
-
-      const card = document.createElement('article');
-      card.className = 'team-card';
-
-      const img = document.createElement('img');
-      img.className = 'team-cover';
-      img.loading = 'lazy';
-      img.src = logo;
-      img.alt = `${name} cover`;
-      img.onerror = () => { img.onerror = null; img.src = FALLBACK_LOGO(name); };
-
-      const body = document.createElement('div');
-      body.className = 'team-body';
-
-      const h3 = document.createElement('h3');
-      h3.className = 'team-name';
-      h3.textContent = name;
-
-      const pCredits = document.createElement('p');
-      pCredits.className = 'team-meta';
-      pCredits.innerHTML = `<strong>Credits remaining:</strong> ${remaining.toLocaleString('en-IN')}`;
-
-      const pCount = document.createElement('p');
-      pCount.className = 'team-meta';
-      pCount.innerHTML = `<strong>Players acquired:</strong> ${stats.count || 0}`;
-
-      body.appendChild(h3);
-      body.appendChild(pCredits);
-      body.appendChild(pCount);
-
-      card.appendChild(img);
-      card.appendChild(body);
-      elTeamGrid.appendChild(card);
-    });
-  }
-
-  // --- Load loop ---
-  async function loadOnce() {
-  try {
-    elStatus.classList.remove('error');
-    elStatus.textContent = 'Loading…';
-
-    const url = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
-    console.log('[Live] requesting:', url); // <--- add this line
-
-    const res = await fetch(url, { cache: 'no-store' });
-    const ct = (res.headers.get('content-type') || '').toLowerCase();
-    console.log('[Live] response:', res.status, ct);
-
-    if (!res.ok) {throw new Error('HTTP ' + res.status);}
-    const text = await res.text();
-    console.log('[Live] first 160 chars:', text.slice(0, 160));
-
-    if (!ct.includes('text/csv') && text.trim().startsWith('<!DOCTYPE')) {
-      throw new Error('Got HTML instead of CSV. Re-publish as CSV or use export URL.');
-    }
-
-    const { items } = toItems(text);
-    console.log('[Live] parsed items:', items.length);
-
-    renderPlayers(items);
-    renderTeams(items);
-
-    elStatus.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
-  } catch (err) {
-    console.error('[Live] load error:', err);
-    elStatus.textContent = 'Failed to load. Retrying…';
-    elStatus.classList.add('error');
-  }
-}
-
-  loadOnce();
-  const timer = setInterval(loadOnce, POLL_MS);
-  window.addEventListener('resize', () => requestAnimationFrame(adjustScrollForTenRows));
-</script>
+    loadLiveData();
+    setInterval(loadLiveData, 15000);
+  </script>
 </body>
 </html>
